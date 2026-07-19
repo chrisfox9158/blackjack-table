@@ -31,6 +31,15 @@ class Card:
     def __repr__(self):
         """Configure shortened Card appearance when the list is called."""
         return self.__str__()
+    
+    def to_dict(self):
+        ranks = {1: 'Ace', 11: 'Jack', 12: 'Queen', 13: 'King'}
+        return {
+            "rank": self.rank,
+            "rank_display": ranks.get(self.rank, str(self.rank)),
+            "suit": self.suit,
+            "value": self.value
+        }
 
 class Hand:
     """Representation of a blackjack hand."""
@@ -95,6 +104,19 @@ class Hand:
     def __repr__(self):
         """Configure shortened Hand appearance when the list is called.""" # Counters memory-location presentation of string representation
         return self.__str__()
+    
+    def to_dict(self):
+        return {
+            "cards": [card._to_dict() for card in self.cards],
+            "value": self.value,
+            "is_soft": self.is_soft,
+            "is_bust": self.is_bust,
+            "is_blackjack": self.is_blackjack,
+            "bet": self.bet,
+            "doubled": self.doubled,
+            "split": self.split,
+            "is_ace_split": self.is_ace_split
+        }
 
 class Shoe:
     """Representation of a shoe, or an active-use collection of decks of cards."""
