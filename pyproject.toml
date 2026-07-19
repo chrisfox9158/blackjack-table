@@ -1,4 +1,4 @@
-[Blackjack Table]
+[project]
 name = "blackjack-table"
 version = "0.1.0"
 description = "Human-playable blackjack simulation derived from machine-learning environment blackjack engine."
