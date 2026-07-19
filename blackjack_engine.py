@@ -1,11 +1,22 @@
 # Library imports
 import random
+from enum import Enum, auto
 
 # Local imports
 from config import BLACKJACK_RULES
 from config import BETTING
 
 # Objects set-up
+class RoundPhase(Enum):
+    """Enum-inherited round phases set."""
+    BETTING = auto()
+    INSURANCE = auto()
+    DEALER_BLACKJACK_CHECK = auto()
+    PLAYER_TURN = auto()
+    DEALER_TURN = auto()
+    SETTLEMENT = auto()
+    ROUND_OVER = auto()
+
 class Card:
     """Representation of a playing card."""
     def __init__(self, rank, suit):
@@ -191,15 +202,62 @@ class GameLoop:
         self.player_hands = {}
         self.player_bankrolls = {}
 
-        self.current_hand_idx = 0
-
         self.insurance_bets = {}
         self.double_bets = {}
 
-        self.round_ended = False
-        self.players_turns_allowed = True
+        self.round_phase = RoundPhase.BETTING
+        self.active_seat = None
+        self.active_hand_idx = None
+    
+    def get_state_for_seat(self, seat_idx):
+        """Retrieve full gamestate for a given player seat."""
+        phase = self.round_phase.name
+        dealer_state = {}
+        
+        # Dealer initial hand display logic
+        if phase not in ["BETTING"]:
+            showing_card = self.dealer.dealer_hand.cards[0].to_dict()
+        else:
+            showing_card = None
+        if phase in ["DEALER_TURN", "SETTLEMENT", "ROUND_OVER"]:
+            hole_card = self.dealer.dealer_hand.cards[1].to_dict()
+            dealer_value = self.dealer.dealer_hand.value
+        else:
+            hole_card = None
+            dealer_value = None
+        dealer_state["showing_card"] = showing_card
+        dealer_state["hole_card"] = hole_card
+        dealer_state["dealer_value"] = dealer_value
 
-        self.keep_playing = True
+        # Seat-specific state dict
+        player_state = {}
+        for loop_seat_idx, hands in self.player_hands.items():
+            player_state[loop_seat_idx] = {
+                "hands": [hand.to_dict() for hand in hands],
+                "bankroll": self.player_bankrolls[loop_seat_idx],
+                "is_user": loop_seat_idx == seat_idx
+                }
+            
+        # Option list builder
+        if seat_idx == self.active_seat and self.round_phase == RoundPhase.PLAYER_TURN:
+            active_hand = self.player_hands[self.active_seat][self.active_hand_idx]
+            legal_actions = ["hit", "stand"]
+            if active_hand.can_double() and self.player_bankrolls[seat_idx] >= active_hand.bet:
+                legal_actions.append("double")
+            if active_hand.can_split() and len(self.player_hands[seat_idx]) < self.rules_config['max_split_hands'] and self.player_bankrolls[seat_idx] >= active_hand.bet:
+                legal_actions.append("split")
+        else:
+            legal_actions = []
+
+        # Final outputting of seat-specific gamestate
+        return {
+            "round_phase": phase,
+            "dealer_state": dealer_state, 
+            "seats": player_state,
+            "active_seat": self.active_seat,
+            "active_hand_idx": self.active_hand_idx,
+            "legal_actions": legal_actions
+            }
     
     def add_player_seat(self, seat_idx):
         """Registers a seat index at the table layout."""
@@ -211,9 +269,7 @@ class GameLoop:
 
         self.insurance_bets = {}
         self.double_bets = {}
-        self.round_ended = False
-        self.players_turns_allowed = True
-        self.current_hand_idx = 0
+        self.active_hand_idx = 0
         self.dealer.reset()
 
     def collect_initial_bets(self, seat_wagers):
@@ -302,10 +358,9 @@ class GameLoop:
         """Execute player phase, with player inputs."""
 
         for seat_idx in self.player_hands:
-
-            self.current_hand_idx = 0
-            while self.current_hand_idx < len(self.player_hands[seat_idx]):
-                current_hand = self.player_hands[seat_idx][self.current_hand_idx]
+            self.active_hand_idx = 0
+            while self.active_hand_idx < len(self.player_hands[seat_idx]):
+                current_hand = self.player_hands[seat_idx][self.active_hand_idx]
                 is_das_legal = (not current_hand.split) or self.rules_config['double_after_split']
                 
                 # Ensure a full hand of two cards before checking hand status and player choices
@@ -316,7 +371,7 @@ class GameLoop:
                 # Blackjack handling:
                 if current_hand.is_blackjack == True:
                     print("This hand is a Blackjack!")
-                    self.current_hand_idx += 1
+                    self.active_hand_idx += 1
                     continue
                 
                 # Perfect 21 and bust handling:
@@ -325,13 +380,13 @@ class GameLoop:
                         print("This hand is a bust.")
                     else:
                         print("This hand is a perfect 21!")
-                    self.current_hand_idx += 1
+                    self.active_hand_idx += 1
                     continue
                 
                 # Ace split handling:
                 if current_hand.is_ace_split:
                     print(f"Seat {seat_idx} split Ace hand receives its single card and stands automatically.")
-                    self.current_hand_idx += 1
+                    self.active_hand_idx += 1
                     continue
 
                 # Print current hand and provide main options
@@ -360,7 +415,7 @@ class GameLoop:
                                 current_hand.is_ace_split = True
                                 new_hand.is_ace_split = True
                             
-                            self.player_hands[seat_idx].insert(self.current_hand_idx + 1, new_hand)
+                            self.player_hands[seat_idx].insert(self.active_hand_idx + 1, new_hand)
                             current_hand.add_card(self.shoe.draw())
                             continue
                         else:
@@ -379,7 +434,7 @@ class GameLoop:
                             current_hand.doubled = True
 
                             current_hand.add_card(self.shoe.draw())
-                            self.current_hand_idx += 1
+                            self.active_hand_idx += 1
                             continue
                         else:
                             print("ERROR: Illegal action! Insufficient bankroll to double down!")
@@ -398,7 +453,7 @@ class GameLoop:
                 # Stand handling
                 elif choice.lower().strip() in ["s", "0", "stand"]:
                     print(f"Player {seat_idx} stands for this hand.")
-                    self.current_hand_idx += 1
+                    self.active_hand_idx += 1
                     continue
 
                 # Edge case catch-all
