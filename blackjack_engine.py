@@ -216,7 +216,7 @@ class GameLoop:
         
         # Dealer initial hand display logic
         if phase not in ["BETTING"]:
-            showing_card = self.dealer.dealer_hand.cards[0].to_dict()
+            showing_card = self.dealer.showing_card().to_dict()
         else:
             showing_card = None
         if phase in ["DEALER_TURN", "SETTLEMENT", "ROUND_OVER"]:
@@ -308,25 +308,24 @@ class GameLoop:
             current_hand.add_card(drawn_card)
         self.dealer.dealer_hand.add_card(self.shoe.draw())
 
+    def insurance_bet(self, seat_idx, accepted):
+        """Allows player insurance betting when possible."""
+        if self.round_phase == RoundPhase.INSURANCE and self.dealer.showing_card().rank == 1:
+            current_hand = self.player_hands[seat_idx][0]
+            offered_insurance = current_hand.bet * 0.5
+            if self.player_bankrolls[seat_idx] >= offered_insurance:
+                if accepted:
+                    self.insurance_bets[seat_idx] = offered_insurance
+                    self.player_bankrolls[seat_idx] -= offered_insurance
+                else:
+                    self.insurance_bets[seat_idx] = 0
+            else:
+                raise ValueError("Insufficient bankroll for insurance.") # Frontend UX should hide accept option
+        else:
+            raise ValueError("Insurance is not currently available.") # Frontend UX should skip insurance
+
     def evaluate_initial_deal(self):
         """Examines initial deal, allowing Insurance and dealer Blackjack check."""
-
-        # Insurance bets, if dealer shows Ace
-        if self.dealer.showing_card().rank == 1:
-            for seat_idx in self.player_hands:
-                current_hand = self.player_hands[seat_idx][0]
-                offered_insurance = current_hand.bet * 0.5
-                if self.player_bankrolls[seat_idx] >= offered_insurance:
-                    insurance_accepted = input("Insurance is available. Accept additional insurance? (y=1, n=0): ")
-                    if insurance_accepted.lower().strip() in ["y", "yes", "1"]:
-                        self.insurance_bets[seat_idx] = offered_insurance
-                        self.player_bankrolls[seat_idx] -= offered_insurance
-                    elif insurance_accepted.lower().strip() in ["n", "no", "0"]:
-                        print("Insurance rejected.")
-                    else:
-                        raise ValueError("Invalid response!")
-                else:
-                    print(f"Player {seat_idx} does not have the chips for insurance.")
 
         # Dealer check for Blackjack, if dealer shows Ace or 10
         if self.dealer.showing_card().value in [10, 11]:
@@ -353,7 +352,7 @@ class GameLoop:
                     print("Dealer checks; Dealer does not have blackjack. Play continues!")
                     print(" ")
                 self.insurance_bets = {}
-    
+
     def execute_player_turns_phase(self):
         """Execute player phase, with player inputs."""
 
