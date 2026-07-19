@@ -201,7 +201,7 @@ class GameLoop:
 
         # First pass: 
         for seat_idx, wager in seat_wagers.items():
-            if wager < self.betting_config['min_bet'] or wager > self.betting_config['max_bet']:
+            if wager < self.betting_config['min_bet'] or wager > self.betting_config['max_bet'] or wager > self.player_bankrolls[seat_idx]:
                 invalid_wagers.append((seat_idx, wager))
         
         # Second pass: 
