@@ -24,3 +24,8 @@ def bet():
     wager = request.json["wager"]
     game.collect_initial_bets({0: wager})
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/deal", methods=["POST"])
+def deal():
+    game.deal_initial_cards()
+    return jsonify(game.get_state_for_seat(0))
