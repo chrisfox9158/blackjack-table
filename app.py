@@ -51,3 +51,8 @@ def action():
 def dealer_turn():
     game.execute_dealer_turn_phase()
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/settle", methods=["POST"])
+def settle():
+    game.evaluate_settlement()
+    return jsonify(game.get_state_for_seat(0))
