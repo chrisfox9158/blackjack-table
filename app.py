@@ -56,3 +56,9 @@ def dealer_turn():
 def settle():
     game.evaluate_settlement()
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/new-round", methods=["POST"])
+def new_round():
+    game.round_cleanup()
+    game.reset_for_new_round()
+    return jsonify(game.get_state_for_seat(0))
