@@ -29,3 +29,9 @@ def bet():
 def deal():
     game.deal_initial_cards()
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/insurance", methods=["POST"])
+def insurance():
+    accepted = request.json["accepted"]
+    game.insurance_bet(0, accepted)
+    return jsonify(game.get_state_for_seat(0))
