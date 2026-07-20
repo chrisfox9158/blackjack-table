@@ -10,6 +10,7 @@ from config import BETTING
 class RoundPhase(Enum):
     """Enum-inherited round phases set."""
     BETTING = auto()
+    DEALING = auto()
     INSURANCE = auto()
     DEALER_BLACKJACK_CHECK = auto()
     PLAYER_TURN = auto()
@@ -215,7 +216,7 @@ class GameLoop:
         dealer_state = {}
         
         # Dealer initial hand display logic
-        if phase not in ["BETTING"]:
+        if phase not in ["BETTING", "DEALING"]:
             showing_card = self.dealer.showing_card().to_dict()
         else:
             showing_card = None
@@ -292,6 +293,8 @@ class GameLoop:
                 new_hand.bet = wager
                 self.player_hands[seat_idx] = [new_hand]
                 self.player_bankrolls[seat_idx] -= wager
+        
+        self.round_phase = RoundPhase.DEALING
 
     def deal_initial_cards(self):
         """Deal initial cards to players."""
@@ -310,6 +313,11 @@ class GameLoop:
             active_hand.add_card(drawn_card)
         self.dealer.dealer_hand.add_card(self.shoe.draw())
 
+        if self.dealer.showing_card().rank == 1:
+            self.round_phase = RoundPhase.INSURANCE
+        else:
+            self.round_phase = RoundPhase.DEALER_BLACKJACK_CHECK
+
     def insurance_bet(self, seat_idx, accepted):
         """Allows player insurance betting when possible."""
         if self.round_phase == RoundPhase.INSURANCE and self.dealer.showing_card().rank == 1:
@@ -325,6 +333,9 @@ class GameLoop:
                 raise ValueError("Insufficient bankroll for insurance.") # Frontend UX should hide accept option
         else:
             raise ValueError("Insurance is not currently available.") # Frontend UX should skip insurance
+        
+        if len(self.insurance_bets) == len(self.player_hands):
+            self.round_phase = RoundPhase.DEALER_BLACKJACK_CHECK
 
     def check_dealer_blackjack(self):
         """Checks for dealer blackjack if showing 10-value or Ace."""
@@ -440,32 +451,33 @@ class GameLoop:
     
     def evaluate_settlement(self):
         """Run payout after a round."""
-
         # Payouts (escrow system; returns investment + winnings)
         for seat_idx in self.player_hands:
             for hand in self.player_hands[seat_idx]:
                 if hand.is_bust:
-                    print(f"Player {seat_idx} hand busted.")
+                    pass # Bust
                 elif self.dealer.dealer_hand.is_bust or hand.value > self.dealer.dealer_hand.value:
-                    if hand.is_blackjack:
+                    if hand.is_blackjack: # Player blackjack
                         self.player_bankrolls[seat_idx] += hand.bet * (1 + self.rules_config['blackjack_payout'])
-                        print(f"Player {seat_idx} won with a Blackjack, winning {hand.bet * self.rules_config['blackjack_payout']} units!")
-                    else:
+                    else: # Player win
                         self.player_bankrolls[seat_idx] += hand.bet * 2
-                        print(f"Player {seat_idx} won with {hand}, winning {hand.bet} units!")
                 elif hand.value == self.dealer.dealer_hand.value:
-                    if hand.is_blackjack: # Dealer is never Blackjack here; this ensures payouts work on a "push" Blackjack.
+                    if hand.is_blackjack: # Blackjack push
                         self.player_bankrolls[seat_idx] += hand.bet * (1 + self.rules_config['blackjack_payout'])
-                        print(f"Player {seat_idx} won with a Blackjack, winning {hand.bet * self.rules_config['blackjack_payout']} units!")
-                    else:
+                    else: # Push
                         self.player_bankrolls[seat_idx] += hand.bet
-                        print(f"Player {seat_idx} pushed!")
                 else:
-                    print(f"Dealer wins against Player {seat_idx} for this hand.")
-    
+                    pass # Dealer win
+
+            # Insurance payout
+            if self.insurance_bets.get(seat_idx, 0) and self.dealer.dealer_hand.is_blackjack:
+                insurance_winnings = self.insurance_bets.get(seat_idx, 0) * 3
+                self.player_bankrolls[seat_idx] += insurance_winnings
+        
+        self.round_phase = RoundPhase.ROUND_OVER
+
     def round_cleanup(self):
         """Run cleanup after a round."""
-
         # Cleanup (wipe layout, reshuffle if necessary)
         self.remove_broke_seats()
         self.player_hands = {}
@@ -474,7 +486,6 @@ class GameLoop:
 
     def remove_broke_seats(self):
         """Remove seats who cannot afford another round."""
-
         survivor_seats = []
         for seat_idx, bankroll in self.player_bankrolls.items():
             if bankroll >= self.betting_config['min_bet']:
@@ -487,63 +498,3 @@ class GameLoop:
             new_hand_seats[new_idx] = self.player_hands[old_idx]
         self.player_bankrolls = new_bankrolls
         self.player_hands = new_hand_seats
-
-    def play_game(self):
-        """Drive the terminal blackjack game, round by round."""
-
-        self.add_player_seat(0)
-
-        while len(self.player_bankrolls) > 0 and self.keep_playing:
-            self.reset_for_new_round()
-            print(" ")
-            print("-" * 10, " New Round! ", "-" * 10)
-
-            print(" ")
-            print(f"Current bankroll balance: {self.player_bankrolls.get(0)}")
-
-            # Betting handling
-            bet_placed = False
-            while not bet_placed:
-                try:
-                    wager = int(input("Place your bet: "))
-                    self.collect_initial_bets({0: wager})
-                    bet_placed = True
-                except ValueError:
-                    print("Input not supported. Try again.")
-            
-            # Initial setups for the round
-            self.deal_initial_cards()
-            print(" ")
-            for seat_idx, hands in self.player_hands.items():
-                print(f"Player {seat_idx}: {hands[0]}")
-
-            print(" ")
-            print(f"Dealer showing: {self.dealer.showing_card()}")
-            self.evaluate_initial_deal()
-
-            # Player, dealer, payout turns for the round
-            if not self.round_ended:
-                self.execute_player_turns_phase()
-                self.execute_dealer_turn_phase()
-                self.evaluate_settlement()
-            
-            # Round cleanup
-            self.round_cleanup()
-
-            # Request to keep playing
-            if self.player_bankrolls.get(0) is not None:
-                print(" ")
-                print(f"Current bankroll balance: {self.player_bankrolls.get(0)}")
-                request_keep_playing = input("Keep playing? (y/n): ")
-                if request_keep_playing.lower().strip() in ["n", "no"]:
-                    self.keep_playing = False
-                else:
-                    self.keep_playing = True
-            else:
-                print("You're out of chips. Game over.")
-                self.keep_playing = False
-
-# Run the game
-if __name__ == "__main__":
-    game = GameLoop()
-    game.play_game()
