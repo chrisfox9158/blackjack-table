@@ -35,3 +35,8 @@ def insurance():
     accepted = request.json["accepted"]
     game.insurance_bet(0, accepted)
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/dealer-check", methods=["POST"])
+def dealer_check():
+    game.check_dealer_blackjack()
+    return jsonify(game.get_state_for_seat(0))
