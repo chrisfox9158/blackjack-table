@@ -206,7 +206,7 @@ class GameLoop:
         self.double_bets = {}
 
         self.round_phase = RoundPhase.BETTING
-        self.active_seat = None
+        self.active_seat_idx = None
         self.active_hand_idx = None
     
     def get_state_for_seat(self, seat_idx):
@@ -239,8 +239,8 @@ class GameLoop:
                 }
             
         # Option list builder
-        if seat_idx == self.active_seat and self.round_phase == RoundPhase.PLAYER_TURN:
-            active_hand = self.player_hands[self.active_seat][self.active_hand_idx]
+        if seat_idx == self.active_seat_idx and self.round_phase == RoundPhase.PLAYER_TURN:
+            active_hand = self.player_hands[self.active_seat_idx][self.active_hand_idx]
             legal_actions = ["hit", "stand"]
             if active_hand.can_double() and self.player_bankrolls[seat_idx] >= active_hand.bet:
                 legal_actions.append("double")
@@ -254,7 +254,7 @@ class GameLoop:
             "round_phase": phase,
             "dealer_state": dealer_state, 
             "seats": player_state,
-            "active_seat": self.active_seat,
+            "active_seat_idx": self.active_seat_idx,
             "active_hand_idx": self.active_hand_idx,
             "legal_actions": legal_actions
             }
@@ -269,7 +269,7 @@ class GameLoop:
 
         self.insurance_bets = {}
         self.double_bets = {}
-        self.active_seat = 0
+        self.active_seat_idx = 0
         self.active_hand_idx = 0
         self.dealer.reset()
         self.round_phase = RoundPhase.BETTING
@@ -298,23 +298,23 @@ class GameLoop:
 
         # First round of cards (players, then dealer)
         for seat_idx in self.player_hands:
-            current_hand = self.player_hands[seat_idx][0]
+            active_hand = self.player_hands[seat_idx][0]
             drawn_card = self.shoe.draw()
-            current_hand.add_card(drawn_card)
+            active_hand.add_card(drawn_card)
         self.dealer.dealer_hand.add_card(self.shoe.draw())
 
         # Second round of cards (players, then dealer)
         for seat_idx in self.player_hands:
-            current_hand = self.player_hands[seat_idx][0]
+            active_hand = self.player_hands[seat_idx][0]
             drawn_card = self.shoe.draw()
-            current_hand.add_card(drawn_card)
+            active_hand.add_card(drawn_card)
         self.dealer.dealer_hand.add_card(self.shoe.draw())
 
     def insurance_bet(self, seat_idx, accepted):
         """Allows player insurance betting when possible."""
         if self.round_phase == RoundPhase.INSURANCE and self.dealer.showing_card().rank == 1:
-            current_hand = self.player_hands[seat_idx][0]
-            offered_insurance = current_hand.bet * 0.5
+            active_hand = self.player_hands[seat_idx][0]
+            offered_insurance = active_hand.bet * 0.5
             if self.player_bankrolls[seat_idx] >= offered_insurance:
                 if accepted:
                     self.insurance_bets[seat_idx] = offered_insurance
@@ -332,115 +332,92 @@ class GameLoop:
             self.round_phase = RoundPhase.SETTLEMENT
         else:
             self.round_phase = RoundPhase.PLAYER_TURN
-            self.active_seat = 0
+            self.active_seat_idx = 0
             self.active_hand_idx = 0
 
-    def execute_player_turns_phase(self):
-        """Execute player phase, with player inputs."""
+    def player_action(self, seat_idx, action):
+        if self.round_phase == RoundPhase.PLAYER_TURN and seat_idx == self.active_seat_idx:
+            active_hand = self.player_hands[self.active_seat_idx][self.active_hand_idx]
+            is_das_legal = (not active_hand.split) or self.rules_config['double_after_split']
 
-        for seat_idx in self.player_hands:
-            self.active_hand_idx = 0
-            while self.active_hand_idx < len(self.player_hands[seat_idx]):
-                current_hand = self.player_hands[seat_idx][self.active_hand_idx]
-                is_das_legal = (not current_hand.split) or self.rules_config['double_after_split']
-                
-                # Ensure a full hand of two cards before checking hand status and player choices
-                if len(current_hand.cards) == 1:
-                    current_hand.add_card(self.shoe.draw())
-                    continue
+            # Split handling
+            if action == "split":
+                if active_hand.can_split() and len(self.player_hands[seat_idx]) < self.rules_config['max_split_hands']:
+                    if self.player_bankrolls[seat_idx] >= active_hand.bet:
+                        self.player_bankrolls[seat_idx] -= active_hand.bet
 
-                # Blackjack handling:
-                if current_hand.is_blackjack == True:
-                    print("This hand is a Blackjack!")
-                    self.active_hand_idx += 1
-                    continue
-                
-                # Perfect 21 and bust handling:
-                if current_hand.value >= 21:
-                    if current_hand.is_bust == True:
-                        print("This hand is a bust.")
+                        # Create new hand, update old hand with new card (second card for new hand comes later)
+                        new_hand = Hand()
+                        new_hand.bet = active_hand.bet
+                        new_hand.split = True
+                        active_hand.split = True
+                        new_hand.add_card(active_hand.cards.pop(1))
+
+                        if active_hand.cards[0].rank == 1: # Ace split markers
+                            active_hand.is_ace_split = True
+                            new_hand.is_ace_split = True
+
+                        self.player_hands[seat_idx].insert(self.active_hand_idx + 1, new_hand)
+                        active_hand.add_card(self.shoe.draw())
+
+                        if self.is_hand_resolved(active_hand):
+                            self.advance_active_hand()
                     else:
-                        print("This hand is a perfect 21!")
-                    self.active_hand_idx += 1
-                    continue
-                
-                # Ace split handling:
-                if current_hand.is_ace_split:
-                    print(f"Seat {seat_idx} split Ace hand receives its single card and stands automatically.")
-                    self.active_hand_idx += 1
-                    continue
-
-                # Print current hand and provide main options
-                print(f"Current hand: {current_hand}")
-                options = "[s or 0] for Stand; [h or 1] for Hit"
-                if current_hand.can_double() and self.player_bankrolls[seat_idx] >= current_hand.bet:
-                    options += "; [d or 2] for Double"
-                if current_hand.can_split() and len(self.player_hands[seat_idx]) < self.rules_config['max_split_hands'] and self.player_bankrolls[seat_idx] >= current_hand.bet:
-                    options += "; [p or 3] for Split"
-                choice = input(f"Choose action ({options}): ").lower().strip()
-                
-                # Split handling
-                if choice.lower().strip() in ["p", "3", "split"]:
-                    if current_hand.can_split() == True and len(self.player_hands[seat_idx]) < self.rules_config['max_split_hands']:
-                        if self.player_bankrolls[seat_idx] >= current_hand.bet:
-                            self.player_bankrolls[seat_idx] -= current_hand.bet
-
-                            # Create new hand, update old hand with new card (second card for new hand comes later)
-                            new_hand = Hand()
-                            new_hand.bet = current_hand.bet
-                            new_hand.split = True
-                            current_hand.split = True
-                            new_hand.add_card(current_hand.cards.pop(1))
-
-                            if current_hand.cards[0].rank == 1: # Ace split markers
-                                current_hand.is_ace_split = True
-                                new_hand.is_ace_split = True
-                            
-                            self.player_hands[seat_idx].insert(self.active_hand_idx + 1, new_hand)
-                            current_hand.add_card(self.shoe.draw())
-                            continue
-                        else:
-                            print(f"ERROR: Illegal action! Insufficient bankroll to split.")
-                            continue
-                    else:
-                        print("ERROR: Illegal action. Cannot split on this hand.")
-                        continue
-
-                # Double-down handling
-                elif choice.lower().strip() in ["d", "2", "double"]:
-                    if current_hand.can_double() == True and is_das_legal == True:
-                        if self.player_bankrolls[seat_idx] >= current_hand.bet:
-                            self.player_bankrolls[seat_idx] -= current_hand.bet
-                            current_hand.bet *= 2
-                            current_hand.doubled = True
-
-                            current_hand.add_card(self.shoe.draw())
-                            self.active_hand_idx += 1
-                            continue
-                        else:
-                            print("ERROR: Illegal action! Insufficient bankroll to double down!")
-                            continue
-                    else:
-                        print("ERROR: Illegal action. Cannot double-down on this hand.")
-                        continue
-
-                # Hit handling
-                elif choice.lower().strip() in ["h", "1", "hit"]:
-                    drawn_card = self.shoe.draw()
-                    current_hand.add_card(drawn_card)
-                    print(f"Player {seat_idx} receives: {drawn_card}")
-                    continue
-
-                # Stand handling
-                elif choice.lower().strip() in ["s", "0", "stand"]:
-                    print(f"Player {seat_idx} stands for this hand.")
-                    self.active_hand_idx += 1
-                    continue
-
-                # Edge case catch-all
+                        raise ValueError("Seat lacks bankroll for split.")
                 else:
-                    print(f"ERROR! Invalid option choice! Please choose a valid command from the menu.")
-                    continue
+                    raise ValueError("Seat unable to split active hand.")
+            
+            # Double handling
+            elif action == "double":
+                if active_hand.can_double() and is_das_legal:
+                    if self.player_bankrolls[seat_idx] >= active_hand.bet:
+                        self.player_bankrolls[seat_idx] -= active_hand.bet
+                        active_hand.bet *= 2
+                        active_hand.doubled = True
+                        active_hand.add_card(self.shoe.draw())
+
+                        self.advance_active_hand()
+                    else:
+                        raise ValueError("Seat lacks bankroll for double.")
+                else:
+                    raise ValueError("Seat unable to double active hand.")
+            
+            # Hit handling
+            elif action == "hit":
+                drawn_card = self.shoe.draw()
+                active_hand.add_card(drawn_card)
+
+                if self.is_hand_resolved(active_hand):
+                    self.advance_active_hand()
+
+            # Stand handling
+            elif action == "stand":
+                self.advance_active_hand()
+            else:
+                raise ValueError("Invalid action.")
+        else:
+            raise ValueError("Unexpected phase or seat.")
+        
+    def is_hand_resolved(self, hand):
+        return hand.is_blackjack or hand.value >= 21 or hand.is_ace_split
+    
+    def advance_active_hand(self):
+        """Advance to next active hand."""
+        while True:
+            if self.active_hand_idx + 1 < len(self.player_hands[self.active_seat_idx]):
+                self.active_hand_idx += 1
+            elif self.active_seat_idx + 1 < len(self.player_hands):
+                self.active_seat_idx += 1
+                self.active_hand_idx = 0
+            else:
+                self.round_phase = RoundPhase.DEALER_TURN
+                self.active_seat_idx = None
+                self.active_hand_idx = None
+                break
+            
+            active_hand = self.player_hands[self.active_seat_idx][self.active_hand_idx]
+            if self.is_hand_resolved(active_hand): continue
+            else: break
 
     def execute_dealer_turn_phase(self):
         """Execute dealer phase, based on ruleset."""
