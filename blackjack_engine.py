@@ -269,8 +269,10 @@ class GameLoop:
 
         self.insurance_bets = {}
         self.double_bets = {}
+        self.active_seat = 0
         self.active_hand_idx = 0
         self.dealer.reset()
+        self.round_phase = RoundPhase.BETTING
 
     def collect_initial_bets(self, seat_wagers):
         """Collect initial player bets."""
