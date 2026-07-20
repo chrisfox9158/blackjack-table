@@ -336,6 +336,7 @@ class GameLoop:
             self.active_hand_idx = 0
 
     def player_action(self, seat_idx, action):
+        """Player action handling for player-turns round."""
         if self.round_phase == RoundPhase.PLAYER_TURN and seat_idx == self.active_seat_idx:
             active_hand = self.player_hands[self.active_seat_idx][self.active_hand_idx]
             is_das_legal = (not active_hand.split) or self.rules_config['double_after_split']
@@ -399,6 +400,7 @@ class GameLoop:
             raise ValueError("Unexpected phase or seat.")
         
     def is_hand_resolved(self, hand):
+        """Check for hand resolution."""
         return hand.is_blackjack or hand.value >= 21 or hand.is_ace_split
     
     def advance_active_hand(self):
