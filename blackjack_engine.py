@@ -430,12 +430,11 @@ class GameLoop:
                     any_hands_active = True
         
         if any_hands_active == False:
-            print("[DEALER]: All player hands busted. Skipping dealer card draws.")
-            print(f"[FOR DEV]: Dealer hand: {self.dealer.dealer_hand}")
+            pass
         else:
-            print("[DEALER]: Active player hands. Dealer will play turn.")
             self.dealer.play_turn(self.shoe)
-            print(f"[DEALER]: Final dealer hand: {self.dealer.dealer_hand}")
+        
+        self.round_phase = RoundPhase.SETTLEMENT
     
     def evaluate_settlement(self):
         """Run payout after a round."""
