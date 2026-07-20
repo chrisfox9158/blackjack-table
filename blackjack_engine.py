@@ -118,7 +118,7 @@ class Hand:
     
     def to_dict(self):
         return {
-            "cards": [card._to_dict() for card in self.cards],
+            "cards": [card.to_dict() for card in self.cards],
             "value": self.value,
             "is_soft": self.is_soft,
             "is_bust": self.is_bust,
@@ -324,34 +324,14 @@ class GameLoop:
         else:
             raise ValueError("Insurance is not currently available.") # Frontend UX should skip insurance
 
-    def evaluate_initial_deal(self):
-        """Examines initial deal, allowing Insurance and dealer Blackjack check."""
-
-        # Dealer check for Blackjack, if dealer shows Ace or 10
-        if self.dealer.showing_card().value in [10, 11]:
-            if self.dealer.dealer_hand.is_blackjack:
-                print("Dealer checks; Dealer has blackjack! Ending round.")
-                for seat_idx in self.player_hands:
-                    if seat_idx in self.insurance_bets:
-                        insurance_winnings = self.insurance_bets[seat_idx] * 3
-                        self.player_bankrolls[seat_idx] += insurance_winnings
-                        print(f"Player {seat_idx} won their insurance wager, earning {insurance_winnings} units!")
-                    
-                    current_hand = self.player_hands[seat_idx][0]
-                    if current_hand.is_blackjack == True:
-                        print(f"Player {seat_idx} pushes. No loss!")
-                        self.player_bankrolls[seat_idx] += current_hand.bet
-                        
-                self.round_ended = True
-                self.players_turns_allowed = False
-            else:
-                if self.dealer.showing_card().value == 11:
-                    print("Dealer checks; Dealer does not have blackjack. Insurance bets are lost. Play continues!")
-                    print(" ")
-                else:
-                    print("Dealer checks; Dealer does not have blackjack. Play continues!")
-                    print(" ")
-                self.insurance_bets = {}
+    def check_dealer_blackjack(self):
+        """Checks for dealer blackjack if showing 10-value or Ace."""
+        if self.dealer.showing_card().value in [10, 11] and self.dealer.dealer_hand.is_blackjack:
+            self.round_phase = RoundPhase.SETTLEMENT
+        else:
+            self.round_phase = RoundPhase.PLAYER_TURN
+            self.active_seat = 0
+            self.active_hand_idx = 0
 
     def execute_player_turns_phase(self):
         """Execute player phase, with player inputs."""
