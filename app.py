@@ -46,3 +46,8 @@ def action():
     action = request.json["action"]
     game.player_action(0, action)
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/dealer-turn", methods=["POST"])
+def dealer_turn():
+    game.execute_dealer_turn_phase()
+    return jsonify(game.get_state_for_seat(0))
