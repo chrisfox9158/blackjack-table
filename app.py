@@ -13,7 +13,7 @@ game = GameLoop()
 def handle_value_error(error):
     return jsonify({"error": str(error)}), 400
 
-# Routes
+# App routes
 @app.route("/join", methods=["POST"])
 def join():
     game.add_player_seat(0)
@@ -66,3 +66,7 @@ def new_round():
 @app.route("/state", methods=["GET"])
 def state():
     return jsonify(game.get_state_for_seat(0))
+
+# Run sequence
+if __name__ == "__main__":
+    app.run(debug=False)
