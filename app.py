@@ -18,3 +18,9 @@ def handle_value_error(error):
 def join():
     game.add_player_seat(0)
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/bet", methods=["POST"])
+def bet():
+    wager = request.json["wager"]
+    game.collect_initial_bets({0: wager})
+    return jsonify(game.get_state_for_seat(0))
