@@ -62,3 +62,7 @@ def new_round():
     game.round_cleanup()
     game.reset_for_new_round()
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/state", methods=["GET"])
+def state():
+    return jsonify(game.get_state_for_seat(0))
