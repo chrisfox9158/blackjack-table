@@ -40,3 +40,9 @@ def insurance():
 def dealer_check():
     game.check_dealer_blackjack()
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/action", methods=["POST"])
+def action():
+    action = request.json["action"]
+    game.player_action(0, action)
+    return jsonify(game.get_state_for_seat(0))
