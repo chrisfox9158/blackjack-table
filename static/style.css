@@ -1,4 +1,4 @@
-/* Root style variables */
+/* ROOT STYLE VARIABLES */
 :root {
     --felt-dark: #0d3b2e;
     --felt-light: #1a5c47;
@@ -13,8 +13,8 @@
     --font-body: "Inter", sans-serif;
 }
 
-/* Base reset and body-level defaults*/
-* {
+/* BASE RESET & BODY LEVEL DEFAULTS */
+* { /* strip browser defaults */
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -83,12 +83,12 @@ header {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-.cards {
+.cards { /* row of cards per hand */
     display: flex;
     flex-direction: row;
 }
 
-.cards .card:not(:first-child) {
+.cards .card:not(:first-child) { /* overlap all but the first */
     margin-left: -60px;
 }
 
@@ -100,7 +100,7 @@ header {
     gap: 2rem;
 }
 
-.hand-group {
+.hand-group { /* one hand's cards, outcome, and bet */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -120,14 +120,72 @@ header {
     font-size: 0.9rem;
 }
 
+/* BET CONFIGURATIONS */
+#bet-form { /* centered bet popup panel */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--felt-light);
+    padding: 2rem 3rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    z-index: 10;
+}
+
+#bet-form[hidden] { /* ensure hidden works */
+    display: none;
+}
+
+#bet-form::before { /* dark backdrop behind bet popup */
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: -1;
+}
+
+#bet-input {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--text-cream);
+    color: var(--surface-dark);
+    width: 100%;
+    text-align: center;
+}
+
+#bet-input::-webkit-inner-spin-button, /* remove Chrome/Safari spinner arrows */
+#bet-input::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#bet-input { /* Firefox-specific fix */
+    -moz-appearance: textfield;
+}
+
+#bet-input:focus { /* highlight while typing */
+    outline: 2px solid var(--accent-red);
+}
+
 /* BUTTON CONFIGURATIONS */
-#button-panel {
+#button-panel { /* stack the two button rows */
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 
-.button-row {
+.button-row { /* one row of buttons */
     display: flex;
     flex-direction: row;
     gap: 0.75rem;

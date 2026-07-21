@@ -316,7 +316,7 @@ function updatePlayAgain(data) {
     }
 }
 
-// Button wiring
+// Button wiring and additional listeners
 document.getElementById("place-bet").addEventListener("click", submitBet);
 document.getElementById("accept-button").addEventListener("click", acceptInsurance);
 document.getElementById("decline-button").addEventListener("click", declineInsurance);
@@ -325,3 +325,14 @@ document.getElementById("stand-button").addEventListener("click", standAction);
 document.getElementById("double-button").addEventListener("click", doubleAction);
 document.getElementById("split-button").addEventListener("click", splitAction);
 document.getElementById("play-again-button").addEventListener("click", playAgain);
+
+const betInput = document.getElementById("bet-input");
+betInput.addEventListener("focus", () => {
+    betInput.dataset.placeholder = betInput.placeholder;
+    betInput.placeholder = "";
+});
+betInput.addEventListener("blur", () => {
+    if (betInput.dataset.placeholder) {
+        betInput.placeholder = betInput.dataset.placeholder;
+    }
+});
