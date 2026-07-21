@@ -1,5 +1,5 @@
 # Library imports
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 # Local imports
 from blackjack_engine import GameLoop
@@ -66,6 +66,10 @@ def new_round():
 @app.route("/state", methods=["GET"])
 def state():
     return jsonify(game.get_state_for_seat(0))
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 # Run sequence
 if __name__ == "__main__":
