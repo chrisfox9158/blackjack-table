@@ -50,3 +50,29 @@ header {
     align-items: center;
     gap: 3rem;
 }
+
+/* PLAYER CONFIGURATIONS */
+.card {
+    width: 80px;
+    height: 112px;
+    background-color: var(--text-cream);
+    color: var(--surface-dark);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.cards {
+    display: flex;
+    flex-direction: row;
+}
+
+.cards .card:not(:first-child) {
+    margin-left: -40px;
+}
