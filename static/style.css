@@ -5,6 +5,7 @@
     --surface-dark: #0a0a0a;
     --accent-red: #c0392b;
     --accent-slate: #2c3e50;
+    --accent-slate-light: #4a5f73;
     --text-cream: #f5f1e8;
     --text-gray: #5b5d54;
 
@@ -25,12 +26,25 @@ body {
     color: var(--text-cream);
 }
 
-/* HEADER AND MAIN TABLE*/
+/* HEADER, FOOTER, AND MAIN TABLE*/
 header {
     background-color: var(--surface-dark);
     padding: 0.5rem 2rem;
     font-family: var(--font-display);
     font-size: 1.5rem;
+}
+
+#action-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--accent-slate);
+    padding: 1rem 2rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
 }
 
 #table {
@@ -52,6 +66,7 @@ header {
 }
 
 /* PLAYER CONFIGURATIONS */
+/* Cards Configurations */
 .card {
     width: 80px;
     height: 112px;
@@ -74,5 +89,72 @@ header {
 }
 
 .cards .card:not(:first-child) {
-    margin-left: -40px;
+    margin-left: -60px;
+}
+
+/* Hands Configurations */
+#hands-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.hand-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* BANNER CONFIGURATIONS */
+.outcome {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--text-cream);
+}
+
+.bet {
+    font-family: var(--font-body);
+    color: var(--text-cream);
+    font-size: 0.9rem;
+}
+
+/* BUTTON CONFIGURATIONS */
+#button-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.button-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+}
+
+button { /* button styling */
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--accent-red);
+    color: var(--text-cream);
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease;
+}
+
+button:disabled { /* gray-out for disabled effect */
+    background-color: var(--accent-slate-light);
+    color: var(--text-cream);
+    cursor: not-allowed;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+}
+
+button:active { /* Press on click effect */
+    transform: translateY(3px);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
