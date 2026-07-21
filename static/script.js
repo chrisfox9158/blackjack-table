@@ -12,7 +12,8 @@ function renderAll(data) {
         return;
     }
 
-    updateBanner(data);
+    updateInfoBanner(data);
+    updateInsuranceBanner(data);
     updateBankroll(data);
     updateInsuranceOptions(data);
     updateBetOption(data);
@@ -91,8 +92,8 @@ function getDealerCardsArray(dealerState) {
     }
 }
 
-// Info banner update function
-function updateBanner(data) {
+// Banner updates
+function updateInfoBanner(data) {
     const banner = document.getElementById("message-banner");
     banner.hidden = false;
     if (data.round_phase === "BETTING") {
@@ -101,6 +102,20 @@ function updateBanner(data) {
         banner.textContent = "Your turn";
     } else {
         banner.hidden = true;
+    }
+}
+
+function updateInsuranceBanner(data) {
+    const insuranceBanner = document.getElementById("insurance-banner");
+    const acceptedInsurance = data.seats[0].insurance_bet > 0;
+    if (data.round_phase === "PLAYER_TURN" && acceptedInsurance) {
+        insuranceBanner.hidden = false;
+        insuranceBanner.textContent = "Insurance lost";
+    } else if (data.round_phase === "SETTLEMENT" && acceptedInsurance && data.dealer_state.is_blackjack) {
+        insuranceBanner.hidden = false;
+        insuranceBanner.textContent = "Insurance won";
+    } else {
+        insuranceBanner.hidden = true;
     }
 }
 
