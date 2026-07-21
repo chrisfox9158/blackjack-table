@@ -261,9 +261,10 @@ class GameLoop:
             }
     
     def add_player_seat(self, seat_idx):
-        """Registers a seat index at the table layout."""
-        self.player_hands[seat_idx] = []
-        self.player_bankrolls[seat_idx] = self.betting_config['initial_bankroll']
+        """Registers a seat index at the table layout, if not already present."""
+        if seat_idx not in self.player_hands:
+            self.player_hands[seat_idx] = []
+            self.player_bankrolls[seat_idx] = self.betting_config['initial_bankroll']
 
     def reset_for_new_round(self):
         """Prepare for a new round."""
