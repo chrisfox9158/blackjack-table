@@ -1,5 +1,5 @@
-// Primary state fetching
-fetch("/state")
+// Player /join seat addition and initial fetching (automatic)
+fetch("/join", { method: "POST" })
     .then(response => response.json())
     .then(data => {
         console.log(data);
@@ -173,6 +173,54 @@ function updateActionButtons(data) {
     }
 }
 
+function hitAction() {
+    fetch("/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "hit" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        renderAll(data);
+    });
+}
+
+function standAction() {
+    fetch("/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "stand" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        renderAll(data);
+    });
+}
+
+function doubleAction() {
+    fetch("/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "double" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        renderAll(data);
+    });
+}
+
+function splitAction() {
+    fetch("/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "split" })
+    })
+    .then(response => response.json())
+    .then(data => {
+        renderAll(data);
+    });
+}
+
 // ROUND_OVER phase handlers
 function playAgain() {
     fetch("/new-round", { method: "POST" })
@@ -190,3 +238,13 @@ function updatePlayAgain(data) {
         playAgainDiv.hidden = true;
     }
 }
+
+// Button wiring
+document.getElementById("place-bet").addEventListener("click", submitBet);
+document.getElementById("accept-button").addEventListener("click", acceptInsurance);
+document.getElementById("decline-button").addEventListener("click", declineInsurance);
+document.getElementById("hit-button").addEventListener("click", hitAction);
+document.getElementById("stand-button").addEventListener("click", standAction);
+document.getElementById("double-button").addEventListener("click", doubleAction);
+document.getElementById("split-button").addEventListener("click", splitAction);
+document.getElementById("play-again-button").addEventListener("click", playAgain);
