@@ -151,9 +151,9 @@ function updateInfoBanner(data) {
     const banner = document.getElementById("message-banner");
     banner.hidden = false;
     if (data.round_phase === "BETTING") {
-        banner.textContent = "Place your bet";
+        banner.textContent = "Place your bet!";
     } else if (data.round_phase === "PLAYER_TURN") {
-        banner.textContent = "Your turn";
+        banner.textContent = "Your turn!";
     } else {
         banner.hidden = true;
     }
