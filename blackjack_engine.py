@@ -221,14 +221,17 @@ class GameLoop:
         else:
             showing_card = None
         if phase in ["DEALER_TURN", "SETTLEMENT", "ROUND_OVER"]:
-            hole_card = self.dealer.dealer_hand.cards[1].to_dict()
+            cards = [card.to_dict() for card in self.dealer.dealer_hand.cards]
             dealer_value = self.dealer.dealer_hand.value
+            is_blackjack = self.dealer.dealer_hand.is_blackjack
         else:
-            hole_card = None
+            cards = None
             dealer_value = None
+            is_blackjack = None
         dealer_state["showing_card"] = showing_card
-        dealer_state["hole_card"] = hole_card
+        dealer_state["cards"] = cards
         dealer_state["dealer_value"] = dealer_value
+        dealer_state["is_blackjack"] = is_blackjack
 
         # Seat-specific state dict
         player_state = {}
@@ -236,6 +239,7 @@ class GameLoop:
             player_state[loop_seat_idx] = {
                 "hands": [hand.to_dict() for hand in hands],
                 "bankroll": self.player_bankrolls[loop_seat_idx],
+                "insurance_bet": self.insurance_bets.get(loop_seat_idx, 0),
                 "is_user": loop_seat_idx == seat_idx
                 }
             

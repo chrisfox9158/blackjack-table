@@ -82,17 +82,12 @@ function renderHands(data) {
 
 // Dealer hand translator (with placeholder hole-card)
 function getDealerCardsArray(dealerState) {
-    let cardsArray = [];
     if (dealerState.showing_card === null) {
-        return cardsArray;
-    } else if (dealerState.hole_card === null) {
-        cardsArray.push(dealerState.showing_card);
-        cardsArray.push({rank_display: "?", suit: "hidden_card"});
-        return cardsArray;
+        return [];
+    } else if (dealerState.cards === null) {
+        return [dealerState.showing_card, { rank_display: "?", suit: "hidden_card" }];
     } else {
-        cardsArray.push(dealerState.showing_card);
-        cardsArray.push(dealerState.hole_card);
-        return cardsArray;
+        return dealerState.cards;
     }
 }
 
