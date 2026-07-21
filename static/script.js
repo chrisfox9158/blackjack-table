@@ -16,6 +16,7 @@ function renderAll(data) {
     updateBankroll(data);
     updateInsuranceOptions(data);
     updateActionButtons(data);
+    updatePlayAgain(data);
     renderHands(data);
 
     const dealerCards = getDealerCardsArray(data.dealer_state);
@@ -169,5 +170,23 @@ function updateActionButtons(data) {
     for (const entry of actionButtons) {
         const button = document.getElementById(entry.id);
         button.disabled = !data.legal_actions.includes(entry.action);
+    }
+}
+
+// ROUND_OVER phase handlers
+function playAgain() {
+    fetch("/new-round", { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            renderAll(data);
+        });
+}
+
+function updatePlayAgain(data) {
+    const playAgainDiv = document.getElementById("play-again-option");
+    if (data.round_phase === "ROUND_OVER") {
+        playAgainDiv.hidden = false;
+    } else {
+        playAgainDiv.hidden = true;
     }
 }
