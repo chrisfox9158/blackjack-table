@@ -15,11 +15,34 @@ function renderAll(data) {
     updateBanner(data);
     updateBankroll(data);
     updateInsuranceOptions(data);
+    updateActionButtons(data);
     renderHands(data);
 
-    // Render cards for state
     const dealerCards = getDealerCardsArray(data.dealer_state);
     renderCards(dealerCards, document.getElementById("dealer-cards"));
+
+    autoAdvance(data);
+}
+
+// Automatic phase advancement
+function autoAdvance(data) {
+    const phaseRoutes = {
+        "DEALING": "/deal",
+        "DEALER_BLACKJACK_CHECK": "/dealer-check",
+        "DEALER_TURN": "/dealer-turn",
+        "SETTLEMENT": "/settle"
+    };
+
+    const nextRoute = phaseRoutes[data.round_phase];
+    if (nextRoute) {
+        setTimeout(() => {
+            fetch(nextRoute, { method: "POST" })
+                .then(response => response.json())
+                .then(newData => {
+                    renderAll(newData);
+                });
+        }, 1500);
+    }
 }
 
 // Card and hands (bets + cards) render functions
@@ -132,4 +155,19 @@ function declineInsurance() {
     .then(data => {
         renderAll(data);
     })
+}
+
+// PLAYER_TURN phase handlers
+function updateActionButtons(data) {
+    const actionButtons = [
+        { id: "hit-button", action: "hit" },
+        { id: "stand-button", action: "stand" },
+        { id: "double-button", action: "double"},
+        { id: "split-button", action: "split"}
+    ];
+
+    for (const entry of actionButtons) {
+        const button = document.getElementById(entry.id);
+        button.disabled = !data.legal_actions.includes(entry.action);
+    }
 }
