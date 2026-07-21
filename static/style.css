@@ -1,0 +1,52 @@
+/* Root style variables */
+:root {
+    --felt-dark: #0d3b2e;
+    --felt-light: #1a5c47;
+    --surface-dark: #0a0a0a;
+    --accent-red: #c0392b;
+    --accent-slate: #2c3e50;
+    --text-cream: #f5f1e8;
+    --text-gray: #5b5d54;
+
+    --font-display: "Playfair Display", serif;
+    --font-body: "Inter", sans-serif;
+}
+
+/* Base reset and body-level defaults*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--surface-dark);
+    color: var(--text-cream);
+}
+
+/* HEADER AND MAIN TABLE*/
+header {
+    background-color: var(--surface-dark);
+    padding: 0.5rem 2rem;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+}
+
+#table {
+    background: radial-gradient(circle, var(--felt-light), var(--felt-dark));
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* DEALER AND SHOE CONFIGURATIONS */
+#dealer-area {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 3rem;
+}
