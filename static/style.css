@@ -1,7 +1,7 @@
 /* ROOT STYLE VARIABLES */
 :root {
-    --felt-dark: #0d3b2e;
-    --felt-light: #1a5c47;
+    --felt-dark: #115542;
+    --felt-light: #268a6a;
     --surface-dark: #0a0a0a;
     --accent-red: #c0392b;
     --accent-slate: #2c3e50;
@@ -24,6 +24,9 @@ body {
     font-family: var(--font-body);
     background-color: var(--surface-dark);
     color: var(--text-cream);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* HEADER, FOOTER, AND MAIN TABLE*/
@@ -41,20 +44,18 @@ header {
     align-items: center;
     background-color: var(--accent-slate);
     padding: 1rem 2rem;
-    position: fixed;
-    bottom: 0;
-    left: 0;
     width: 100%;
 }
 
 #table {
-    background: radial-gradient(circle, var(--felt-light), var(--felt-dark));
-    min-height: 100vh;
+    background: var(--felt-dark);
     padding: 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: space-between;
     gap: 2rem;
+    flex: 1;
 }
 
 /* DEALER AND SHOE CONFIGURATIONS */
@@ -69,7 +70,11 @@ header {
     padding: 2rem 3rem;
     min-height: 180px;
     min-width: 500px;
-    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow:
+        inset 0 4px 8px rgba(0, 0, 0, 0.35),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.35),
+        inset 4px 0 8px rgba(0, 0, 0, 0.25),
+        inset -4px 0 8px rgba(0, 0, 0, 0.25);
 }
 
 #shoe {
@@ -134,7 +139,11 @@ header {
     padding: 2rem 3rem;
     min-height: 180px;
     width: 700px;
-    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow:
+        inset 0 4px 8px rgba(0, 0, 0, 0.35),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.35),
+        inset 4px 0 8px rgba(0, 0, 0, 0.25),
+        inset -4px 0 8px rgba(0, 0, 0, 0.25);
 }
 
 /* BANNER CONFIGURATIONS */
