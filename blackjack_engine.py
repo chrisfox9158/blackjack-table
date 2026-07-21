@@ -481,7 +481,8 @@ class GameLoop:
         """Run cleanup after a round."""
         # Cleanup (wipe layout, reshuffle if necessary)
         self.remove_broke_seats()
-        self.player_hands = {}
+        for seat_idx in self.player_hands:
+            self.player_hands[seat_idx] = []
         if self.shoe.needs_reshuffle == True:
             self.shoe.reset()
 
