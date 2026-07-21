@@ -15,6 +15,7 @@ function renderAll(data) {
     updateBanner(data);
     updateBankroll(data);
     updateInsuranceOptions(data);
+    updateBetOption(data);
     updateActionButtons(data);
     updatePlayAgain(data);
     renderHands(data);
@@ -68,6 +69,9 @@ function renderHands(data) {
         betDiv.className = "bet";
 
         betDiv.textContent = hand.bet;
+        if (data.round_phase === "SETTLEMENT" || data.round_phase === "ROUND_OVER") {
+            betDiv.hidden = true;
+        }
         renderCards(hand.cards, cardsDiv);
         handGroupDiv.appendChild(cardsDiv);
         handGroupDiv.appendChild(betDiv);
@@ -109,6 +113,15 @@ function updateBanner(data) {
 function updateBankroll(data) {
     const bankrollElement = document.getElementById("bankroll-chips");
     bankrollElement.textContent = data.seats[0].bankroll;
+}
+
+function updateBetOption(data) {
+    const betFormDiv = document.getElementById("bet-form");
+    if (data.round_phase === "BETTING") {
+        betFormDiv.hidden = false;
+    } else {
+        betFormDiv.hidden = true;
+    }
 }
 
 function submitBet() {
