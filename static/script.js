@@ -52,9 +52,19 @@ function autoAdvance(data) {
 function renderCards(cardsArray, containerElement) {
     containerElement.innerHTML = "";
     for (const card of cardsArray) {
-        const cardElement = document.createElement("div");
-        cardElement.textContent = card.rank_display + " of " + card.suit;
-        containerElement.appendChild(cardElement);
+        const svgNS = "http://www.w3.org/2000/svg";
+        const cardSvg = document.createElementNS(svgNS, "svg");
+        cardSvg.setAttribute("class", "card");
+        cardSvg.setAttribute("viewBox", "0 0 169.075 244.640");
+        cardSvg.setAttribute("width", "80");
+        cardSvg.setAttribute("height", "112");
+
+        const useEl = document.createElementNS(svgNS, "use");
+        const fragmentId = card.fragmentId || getCardFragmentId(card);
+        useEl.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "/static/svg-cards.svg#" + fragmentId);
+        cardSvg.appendChild(useEl);
+
+        containerElement.appendChild(cardSvg);
     }
 }
 
@@ -94,12 +104,30 @@ function renderHands(data) {
     }
 }
 
+// Card name translator for SVG assets
+function getCardFragmentId(card) {
+    const suitMap = {
+        "Hearts": "heart",
+        "Diamonds": "diamond",
+        "Clubs": "club",
+        "Spades": "spade"
+    };
+    const rankMap = {
+        11: "jack",
+        12: "queen",
+        13: "king"
+    };
+    const suitName = suitMap[card.suit];
+    const rankName = rankMap[card.rank] || card.rank;
+    return suitName + "_" + rankName;
+}
+
 // Dealer hand translator (with placeholder hole-card)
 function getDealerCardsArray(dealerState) {
     if (dealerState.showing_card === null) {
         return [];
     } else if (dealerState.cards === null) {
-        return [dealerState.showing_card, { rank_display: "?", suit: "hidden_card" }];
+        return [dealerState.showing_card, { fragmentId: "back" }];
     } else {
         return dealerState.cards;
     }
