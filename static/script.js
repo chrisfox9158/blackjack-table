@@ -14,6 +14,7 @@ function renderAll(data) {
 
     updateBanner(data);
     updateBankroll(data);
+    updateInsuranceOptions(data);
     renderHands(data);
 
     // Render cards for state
@@ -92,6 +93,40 @@ function submitBet() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wager: bet })
+    })
+    .then(response => response.json())
+    .then(data => {
+        renderAll(data);
+    })
+}
+
+// INSURANCE phase handlers
+function updateInsuranceOptions(data) {
+    const insuranceDiv = document.getElementById("insurance-options");
+    if (data.round_phase === "INSURANCE") {
+        insuranceDiv.hidden = false;
+    } else {
+        insuranceDiv.hidden = true;
+    }
+}
+
+function acceptInsurance() {
+    fetch("/insurance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accepted: true })
+    })
+    .then(response => response.json())
+    .then(data => {
+        renderAll(data);
+    })
+}
+
+function declineInsurance() {
+    fetch("/insurance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accepted: false })
     })
     .then(response => response.json())
     .then(data => {
