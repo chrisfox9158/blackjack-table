@@ -20,6 +20,7 @@ function renderAll(data) {
     updateActionButtons(data);
     updatePlayAgain(data);
     renderHands(data);
+    renderShoe();
 
     const dealerCards = getDealerCardsArray(data.dealer_state);
     renderCards(dealerCards, document.getElementById("dealer-cards"));
@@ -102,6 +103,13 @@ function renderHands(data) {
 
         handsContainer.appendChild(handGroupDiv);
     }
+}
+
+// Shoe rendering
+function renderShoe() {
+    const shoeContainer = document.getElementById("shoe");
+    const shoeCards = Array(6).fill({ fragmentId: "back" });
+    renderCards(shoeCards, shoeContainer);
 }
 
 // Card name translator for SVG assets
