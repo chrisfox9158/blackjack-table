@@ -4,6 +4,7 @@ fetch("/state")
     .then(data => {
         console.log(data);
         updateBanner(data);
+        updateBankroll(data);
     
         // Render cards for state
         const dealerCards = getDealerCardsArray(data.dealer_state);
@@ -48,4 +49,10 @@ function getDealerCardsArray(dealerState) {
         cardsArray.push(dealerState.hole_card);
         return cardsArray;
     }
+}
+
+// BETTING phase handlers
+function updateBankroll(data) {
+    const bankrollElement = document.getElementById("bankroll-chips");
+    bankrollElement.textContent = data.seats[0].bankroll;
 }
