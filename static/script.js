@@ -66,15 +66,28 @@ function renderHands(data) {
         handGroupDiv.className = "hand-group";
         const cardsDiv = document.createElement("div");
         cardsDiv.className = "cards";
+        const outcomeDiv = document.createElement("div");
+        outcomeDiv.className = "outcome";
         const betDiv = document.createElement("div");
         betDiv.className = "bet";
+
+        renderCards(hand.cards, cardsDiv);
+
+        const outcomeText = getHandOutcomeStrings(hand.outcome);
+        if (outcomeText) {
+            outcomeDiv.textContent = outcomeText;
+            outcomeDiv.hidden = false;
+        } else {
+            outcomeDiv.hidden = true;
+        }
 
         betDiv.textContent = hand.bet;
         if (data.round_phase === "SETTLEMENT" || data.round_phase === "ROUND_OVER") {
             betDiv.hidden = true;
         }
-        renderCards(hand.cards, cardsDiv);
+
         handGroupDiv.appendChild(cardsDiv);
+        handGroupDiv.appendChild(outcomeDiv);
         handGroupDiv.appendChild(betDiv);
 
         handsContainer.appendChild(handGroupDiv);
@@ -90,6 +103,19 @@ function getDealerCardsArray(dealerState) {
     } else {
         return dealerState.cards;
     }
+}
+
+// Hand outcome translator
+function getHandOutcomeStrings(outcome) {
+    const outcomeText = {
+        "bust": "Bust",
+        "player_blackjack_win": "Blackjack!",
+        "player_win": "Win!",
+        "blackjack_push": "Push",
+        "push": "Push",
+        "loss": "Loss"
+    };
+    return outcomeText[outcome];
 }
 
 // Banner updates

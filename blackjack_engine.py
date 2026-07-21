@@ -61,6 +61,7 @@ class Hand:
         self.doubled = False
         self.split = False
         self.is_ace_split = False
+        self.outcome = None
 
     @property
     def values(self):
@@ -127,7 +128,8 @@ class Hand:
             "bet": self.bet,
             "doubled": self.doubled,
             "split": self.split,
-            "is_ace_split": self.is_ace_split
+            "is_ace_split": self.is_ace_split,
+            "outcome": self.outcome
         }
 
 class Shoe:
@@ -460,19 +462,23 @@ class GameLoop:
         for seat_idx in self.player_hands:
             for hand in self.player_hands[seat_idx]:
                 if hand.is_bust:
-                    pass # Bust
+                    hand.outcome = "bust"
                 elif self.dealer.dealer_hand.is_bust or hand.value > self.dealer.dealer_hand.value:
                     if hand.is_blackjack: # Player blackjack
+                        hand.outcome = "player_blackjack_win"
                         self.player_bankrolls[seat_idx] += hand.bet * (1 + self.rules_config['blackjack_payout'])
                     else: # Player win
+                        hand.outcome = "player_win"
                         self.player_bankrolls[seat_idx] += hand.bet * 2
                 elif hand.value == self.dealer.dealer_hand.value:
                     if hand.is_blackjack: # Blackjack push
+                        hand.outcome = "blackjack_push"
                         self.player_bankrolls[seat_idx] += hand.bet * (1 + self.rules_config['blackjack_payout'])
                     else: # Push
+                        hand.outcome = "push"
                         self.player_bankrolls[seat_idx] += hand.bet
                 else:
-                    pass # Dealer win
+                    hand.outcome = "loss"
 
             # Insurance payout
             if self.insurance_bets.get(seat_idx, 0) and self.dealer.dealer_hand.is_blackjack:
