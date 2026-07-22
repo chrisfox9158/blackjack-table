@@ -98,7 +98,7 @@ function renderHands(data) {
         }
 
         betDiv.textContent = hand.bet;
-        if (data.round_phase === "SETTLEMENT" || data.round_phase === "ROUND_OVER") {
+        if (data.round_phase === "ROUND_OVER") {
             betDiv.hidden = true;
         }
 
@@ -178,7 +178,7 @@ function updateBanners(data) {
         messageBanner.hidden = true;
         container.classList.add("active");
     } else if (showYourTurn) {
-        messageText.textContent = repeatForScroll("Your turn");
+        messageText.textContent = repeatForScroll("Your turn!");
         messageBanner.hidden = false;
         insuranceBanner.hidden = true;
         container.classList.add("active");
@@ -188,7 +188,7 @@ function updateBanners(data) {
 }
 
 function repeatForScroll(text) {
-    return (text + "          •          ").repeat(6);
+    return (text + "               ").repeat(6);
 }
 
 // BETTING phase handlers

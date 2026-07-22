@@ -169,7 +169,7 @@ header {
     left: 50%;
     bottom: 100%;
     transform: translateX(-50%) translateY(100%);
-    transition: transform 0.35s ease;
+    transition: transform 0.55s ease;
     z-index: 1;
     border-radius: 16px 16px 0 0;
     overflow: hidden;
@@ -257,8 +257,15 @@ header {
     outline: 2px solid var(--accent-red);
 }
 
-/* BUTTON CONFIGURATIONS */
-#button-panel { /* stack the two button rows */
+/* ACTION AND INSURANCE BUTTON CONFIGURATIONS */
+#controls-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#button-panel {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -296,7 +303,6 @@ button:active { /* Press on click effect */
     box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
-/* INSURANCE OPTIONS */
 #insurance-options {
     display: flex;
     gap: 0.75rem;
