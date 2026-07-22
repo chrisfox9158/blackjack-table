@@ -2,7 +2,7 @@
 <html>
     <head>
         <title> Blackjack </title>
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
         <link href="/static/style.css" rel="stylesheet" >
     </head>
     <body>
@@ -13,10 +13,6 @@
             <div id="dealer-area">
                 <div id="dealer-cards" class="cards"></div>
                 <div id="shoe"></div>
-            </div>
-            <div id="banner-container">
-                <div id="insurance-banner"></div>
-                <div id="message-banner"></div>
             </div>
             <div id="play-again-option">
                 <button id="play-again-button">Play Again</button>
@@ -32,6 +28,10 @@
                     <input type="number" id="bet-input" name="bet-input" placeholder="Enter your bet">
                     <button id="place-bet">Place Bet</button>
                 </div>
+                <div id="banner-container">
+                    <div id="insurance-banner"><span></span></div>
+                    <div id="message-banner"><span></span></div>
+                </div>
             </div>
         </div>
         <footer id="action-bar">
@@ -42,10 +42,10 @@
                     <button id="double-button">Double</button>
                     <button id="split-button">Split</button>
                 </div>
-                <div id="insurance-options">
-                    <button id="accept-button">Accept</button>
-                    <button id="decline-button">Decline</button>
-                </div>
+            </div>
+            <div id="insurance-options">
+                <button id="accept-button">Accept</button>
+                <button id="decline-button">Decline</button>
             </div>
             <div id="bankroll-chips"></div>
         </footer>

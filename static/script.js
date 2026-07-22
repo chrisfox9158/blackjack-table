@@ -12,8 +12,7 @@ function renderAll(data) {
         return;
     }
 
-    updateInfoBanner(data);
-    updateInsuranceBanner(data);
+    updateBanners(data);
     updateBankroll(data);
     updateInsuranceOptions(data);
     updateBetOption(data);
@@ -93,7 +92,7 @@ function renderHands(data) {
         }
 
         betDiv.textContent = hand.bet;
-        if (data.round_phase === "SETTLEMENT" || data.round_phase === "ROUND_OVER") {
+        if (data.round_phase === "ROUND_OVER") {
             betDiv.hidden = true;
         }
 
@@ -155,30 +154,35 @@ function getHandOutcomeStrings(outcome) {
 }
 
 // Banner updates
-function updateInfoBanner(data) {
-    const banner = document.getElementById("message-banner");
-    banner.hidden = false;
-    if (data.round_phase === "BETTING") {
-        banner.textContent = "Place your bet!";
-    } else if (data.round_phase === "PLAYER_TURN") {
-        banner.textContent = "Your turn!";
+function updateBanners(data) {
+    const container = document.getElementById("banner-container");
+    const messageBanner = document.getElementById("message-banner");
+    const insuranceBanner = document.getElementById("insurance-banner");
+    const messageText = messageBanner.querySelector("span");
+    const insuranceText = insuranceBanner.querySelector("span");
+
+    const acceptedInsurance = data.seats[0].insurance_bet > 0;
+    const insuranceLost = data.round_phase === "PLAYER_TURN" && acceptedInsurance;
+    const insuranceWon = data.round_phase === "SETTLEMENT" && acceptedInsurance && data.dealer_state.is_blackjack;
+    const showYourTurn = data.round_phase === "PLAYER_TURN" && !acceptedInsurance;
+
+    if (insuranceLost || insuranceWon) {
+        insuranceText.textContent = repeatForScroll(insuranceLost ? "Insurance lost!" : "Insurance won!");
+        insuranceBanner.hidden = false;
+        messageBanner.hidden = true;
+        container.classList.add("active");
+    } else if (showYourTurn) {
+        messageText.textContent = repeatForScroll("Your turn");
+        messageBanner.hidden = false;
+        insuranceBanner.hidden = true;
+        container.classList.add("active");
     } else {
-        banner.hidden = true;
+        container.classList.remove("active");
     }
 }
 
-function updateInsuranceBanner(data) {
-    const insuranceBanner = document.getElementById("insurance-banner");
-    const acceptedInsurance = data.seats[0].insurance_bet > 0;
-    if (data.round_phase === "PLAYER_TURN" && acceptedInsurance) {
-        insuranceBanner.hidden = false;
-        insuranceBanner.textContent = "Insurance lost";
-    } else if (data.round_phase === "SETTLEMENT" && acceptedInsurance && data.dealer_state.is_blackjack) {
-        insuranceBanner.hidden = false;
-        insuranceBanner.textContent = "Insurance won";
-    } else {
-        insuranceBanner.hidden = true;
-    }
+function repeatForScroll(text) {
+    return (text + "          •          ").repeat(6);
 }
 
 // BETTING phase handlers
