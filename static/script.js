@@ -6,7 +6,7 @@ fetch("/join", { method: "POST" })
         renderAll(data);
     });
 
-// Render all 
+// Render all
 function renderAll(data) {
     if (!data.seats[0]) {
         return;
@@ -22,7 +22,7 @@ function renderAll(data) {
     renderShoe();
 
     const dealerCards = getDealerCardsArray(data.dealer_state);
-    renderCards(dealerCards, document.getElementById("dealer-cards"));
+    dealCardsSequentially(dealerCards, document.getElementById("dealer-cards"), "dealer");
 
     autoAdvance(data);
 }
@@ -35,6 +35,12 @@ function autoAdvance(data) {
         "DEALER_TURN": "/dealer-turn",
         "SETTLEMENT": "/settle"
     };
+    const phaseDelays = {
+        "DEALING": 2500,
+        "DEALER_BLACKJACK_CHECK": 3200,
+        "DEALER_TURN": 1500,
+        "SETTLEMENT": 1500
+    };
 
     const nextRoute = phaseRoutes[data.round_phase];
     if (nextRoute) {
@@ -44,30 +50,11 @@ function autoAdvance(data) {
                 .then(newData => {
                     renderAll(newData);
                 });
-        }, 1500);
+        }, phaseDelays[data.round_phase]);
     }
 }
 
-// Card and hands (bets + cards) render functions
-function renderCards(cardsArray, containerElement) {
-    containerElement.innerHTML = "";
-    for (const card of cardsArray) {
-        const svgNS = "http://www.w3.org/2000/svg";
-        const cardSvg = document.createElementNS(svgNS, "svg");
-        cardSvg.setAttribute("class", "card");
-        cardSvg.setAttribute("viewBox", "0 0 169.075 244.640");
-        cardSvg.setAttribute("width", "110");
-        cardSvg.setAttribute("height", "154");
-
-        const useEl = document.createElementNS(svgNS, "use");
-        const fragmentId = card.fragmentId || getCardFragmentId(card);
-        useEl.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "/static/svg-cards.svg#" + fragmentId);
-        cardSvg.appendChild(useEl);
-
-        containerElement.appendChild(cardSvg);
-    }
-}
-
+// Hand, Card, and holders rendering
 function renderHands(data) {
     const handsContainer = document.getElementById("hands-container");
     handsContainer.innerHTML = "";
@@ -86,17 +73,6 @@ function renderHands(data) {
         outcomeDiv.className = "outcome";
         const betDiv = document.createElement("div");
         betDiv.className = "bet";
-
-        renderCards(hand.cards, cardsDiv);
-
-        const outcomeText = getHandOutcomeStrings(hand.outcome);
-        if (outcomeText) {
-            outcomeDiv.textContent = outcomeText;
-            outcomeDiv.hidden = false;
-        } else {
-            outcomeDiv.hidden = true;
-        }
-
         betDiv.textContent = hand.bet;
         if (data.round_phase === "ROUND_OVER") {
             betDiv.hidden = true;
@@ -105,19 +81,181 @@ function renderHands(data) {
         handGroupDiv.appendChild(cardsDiv);
         handGroupDiv.appendChild(outcomeDiv);
         handGroupDiv.appendChild(betDiv);
-
         handsContainer.appendChild(handGroupDiv);
+
+        dealCardsSequentially(hand.cards, cardsDiv, "seat0-hand" + index, () => {
+            betDiv.classList.add("visible");
+            if (isActiveHand) {
+                setTimeout(() => {
+                    cardsDiv.classList.add("active");
+                }, 500);
+            }
+        });
+
+        const outcomeText = getHandOutcomeStrings(hand.outcome);
+        if (outcomeText) {
+            outcomeDiv.textContent = outcomeText;
+            outcomeDiv.hidden = false;
+        } else {
+            outcomeDiv.hidden = true;
+        }
     }
 }
 
-// Shoe rendering
 function renderShoe() {
     const shoeContainer = document.getElementById("shoe");
     const shoeCards = Array(6).fill({ fragmentId: "back" });
-    renderCards(shoeCards, shoeContainer);
+    renderCardsInstant(shoeCards, shoeContainer);
 }
 
-// Card name translator for SVG assets
+function appendOneCard(card, containerElement) {
+    const svgNS = "http://www.w3.org/2000/svg";
+    const cardSvg = document.createElementNS(svgNS, "svg");
+    cardSvg.setAttribute("class", "card deal-in");
+    cardSvg.setAttribute("viewBox", "0 0 169.075 244.640");
+    cardSvg.setAttribute("width", "110");
+    cardSvg.setAttribute("height", "154");
+
+    const useEl = document.createElementNS(svgNS, "use");
+    const fragmentId = card.fragmentId || getCardFragmentId(card);
+    useEl.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "/static/svg-cards.svg#" + fragmentId);
+    cardSvg.appendChild(useEl);
+
+    containerElement.appendChild(cardSvg);
+}
+
+function appendOneCardInstant(card, containerElement) {
+    const svgNS = "http://www.w3.org/2000/svg";
+    const cardSvg = document.createElementNS(svgNS, "svg");
+    cardSvg.setAttribute("class", "card");
+    cardSvg.setAttribute("viewBox", "0 0 169.075 244.640");
+    cardSvg.setAttribute("width", "110");
+    cardSvg.setAttribute("height", "154");
+
+    const useEl = document.createElementNS(svgNS, "use");
+    const fragmentId = card.fragmentId || getCardFragmentId(card);
+    useEl.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "/static/svg-cards.svg#" + fragmentId);
+    cardSvg.appendChild(useEl);
+
+    containerElement.appendChild(cardSvg);
+}
+
+function renderCardsInstant(cardsArray, containerElement) {
+    containerElement.innerHTML = "";
+    for (const card of cardsArray) {
+        appendOneCardInstant(card, containerElement);
+    }
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function calculateHolderSize(n) {
+    const overlapStep = 30;
+    return {
+        width: 110 + (n - 1) * overlapStep + 32,
+        height: 154 + 32
+    };
+}
+
+async function growHolderFor(containerElement, key, cardCount) {
+    const size = calculateHolderSize(cardCount);
+
+    if (!revealedHands.has(key)) {
+        revealedHands.add(key);
+        saveRevealedHands();
+        containerElement.style.width = "110px";
+        containerElement.style.height = "154px";
+        containerElement.classList.add("revealed");
+        await sleep(300);
+        containerElement.classList.add("expanded");
+        await sleep(50);
+    }
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            containerElement.style.width = size.width + "px";
+            containerElement.style.height = size.height + "px";
+        });
+    });
+    await sleep(300);
+}
+
+const dealingInProgress = new Set();
+async function dealCardsSequentially(cardsArray, containerElement, key, onExpanded) {
+    while (dealingInProgress.has(key)) {
+        await sleep(50);
+    }
+    dealingInProgress.add(key);
+
+    try {
+        containerElement.innerHTML = "";
+
+        if (cardsArray.length === 0) {
+            containerElement.classList.remove("revealed", "expanded", "active");
+            containerElement.style.width = "";
+            containerElement.style.height = "";
+            if (onExpanded) onExpanded();
+            return;
+        }
+
+        if (revealedHands.has(key)) {
+            containerElement.classList.add("revealed", "expanded");
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const size = calculateHolderSize(cardsArray.length);
+                    containerElement.style.width = size.width + "px";
+                    containerElement.style.height = size.height + "px";
+                });
+            });
+        }
+
+        for (const [i, card] of cardsArray.entries()) {
+            const cardKey = key + "-" + i + "-" + (card.fragmentId || getCardFragmentId(card));
+            const alreadyDealt = key !== "shoe" && dealtCards.has(cardKey);
+
+            if (alreadyDealt) {
+                appendOneCardInstant(card, containerElement);
+                continue;
+            }
+
+            await growHolderFor(containerElement, key, i + 1);
+            await sleep(320);
+            appendOneCard(card, containerElement);
+
+            if (key !== "shoe") {
+                dealtCards.add(cardKey);
+                saveDealtCards();
+            }
+
+            await sleep(400);
+        }
+
+        if (onExpanded) onExpanded();
+    } finally {
+        dealingInProgress.delete(key);
+    }
+}
+
+const revealedHands = loadRevealedHands();
+function loadRevealedHands() {
+    const saved = sessionStorage.getItem("revealedHands");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+}
+function saveRevealedHands() {
+    sessionStorage.setItem("revealedHands", JSON.stringify([...revealedHands]));
+}
+
+const dealtCards = loadDealtCards();
+function loadDealtCards() {
+    const saved = sessionStorage.getItem("dealtCards");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+}
+function saveDealtCards() {
+    sessionStorage.setItem("dealtCards", JSON.stringify([...dealtCards]));
+}
+
 function getCardFragmentId(card) {
     const suitMap = {
         "Hearts": "heart",
@@ -135,7 +273,6 @@ function getCardFragmentId(card) {
     return suitName + "_" + rankName;
 }
 
-// Dealer hand translator (with placeholder hole-card)
 function getDealerCardsArray(dealerState) {
     if (dealerState.showing_card === null) {
         return [];
@@ -146,7 +283,7 @@ function getDealerCardsArray(dealerState) {
     }
 }
 
-// Hand outcome translator
+// Hand outcome strings
 function getHandOutcomeStrings(outcome) {
     const outcomeText = {
         "bust": "Bust",
@@ -159,7 +296,11 @@ function getHandOutcomeStrings(outcome) {
     return outcomeText[outcome];
 }
 
-// Banner updates
+// Banner systems
+function repeatForScroll(text) {
+    return (text + "               ").repeat(20);
+}
+
 function updateBanners(data) {
     const container = document.getElementById("banner-container");
     const messageBanner = document.getElementById("message-banner");
@@ -187,11 +328,7 @@ function updateBanners(data) {
     }
 }
 
-function repeatForScroll(text) {
-    return (text + "               ").repeat(6);
-}
-
-// BETTING phase handlers
+// Bankroll and betting updates
 function updateBankroll(data) {
     const bankrollElement = document.getElementById("bankroll-chips");
     bankrollElement.textContent = data.seats[0].bankroll;
@@ -219,7 +356,7 @@ function submitBet() {
     })
 }
 
-// INSURANCE phase handlers
+// Insurance systems
 function updateInsuranceOptions(data) {
     const insuranceDiv = document.getElementById("insurance-options");
     if (data.round_phase === "INSURANCE") {
@@ -253,7 +390,7 @@ function declineInsurance() {
     })
 }
 
-// PLAYER_TURN phase handlers
+// Action button handlers
 function updateActionButtons(data) {
     const actionButtons = [
         { id: "hit-button", action: "hit" },
@@ -305,22 +442,32 @@ function doubleAction() {
 }
 
 function splitAction() {
-    fetch("/action", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "split" })
-    })
-    .then(response => response.json())
-    .then(data => {
-        renderAll(data);
-    });
+    const activeCards = document.querySelector(".cards.active");
+    if (activeCards && activeCards.children[1]) {
+        activeCards.children[1].classList.add("fade-out");
+    }
+    setTimeout(() => {
+        fetch("/action", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "split" })
+        })
+        .then(response => response.json())
+        .then(data => {
+            renderAll(data);
+        });
+    }, 300);
 }
 
-// ROUND_OVER phase handlers
+// Play again request
 function playAgain() {
     fetch("/new-round", { method: "POST" })
         .then(response => response.json())
         .then(data => {
+            revealedHands.clear();
+            saveRevealedHands();
+            dealtCards.clear();
+            saveDealtCards();
             renderAll(data);
         });
 }
@@ -334,7 +481,7 @@ function updatePlayAgain(data) {
     }
 }
 
-// Button wiring and additional listeners
+// Event listeners
 document.getElementById("place-bet").addEventListener("click", submitBet);
 document.getElementById("accept-button").addEventListener("click", acceptInsurance);
 document.getElementById("decline-button").addEventListener("click", declineInsurance);

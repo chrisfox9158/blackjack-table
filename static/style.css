@@ -34,6 +34,10 @@ body {
     flex-direction: column;
 }
 
+html, body {
+    overflow: hidden;
+}
+
 /* HEADER, FOOTER, AND MAIN TABLE*/
 header {
     background-color: var(--surface-dark);
@@ -51,6 +55,7 @@ header {
     background-color: var(--accent-slate);
     padding: 1rem 2rem;
     width: 100%;
+    min-height: 88px;
 }
 
 #table {
@@ -74,7 +79,7 @@ header {
     background-color: var(--felt-light);
     border-radius: 16px;
     padding: 2rem 3rem;
-    min-height: 220px;
+    min-height: 260px;
     min-width: 600px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4)
 }
@@ -112,8 +117,24 @@ header {
     flex-direction: row;
     background-color: var(--accent-slate);
     border-radius: 12px;
-    padding: 1rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    padding: 0;
+    min-height: 0;
+    min-width: 0;
+    opacity: 0;
+    transition: padding 0.3s ease, width 0.3s ease, height 0.3s ease, opacity 0.2s ease, background-color 0.6s ease;
+}
+
+.cards.revealed {
+    opacity: 1;
+    min-height: var(--card-height);
+    min-width: var(--card-width);
+}
+
+.cards.expanded {
+    padding: 1rem;
+    min-height: calc(var(--card-height) + 2rem);
+    min-width: calc(var(--card-width) + 2rem);
 }
 
 .cards.active {
@@ -122,6 +143,26 @@ header {
 
 .cards .card:not(:first-child) { /* overlap all but the first */
     margin-left: -80px;
+}
+
+.card.deal-in {
+    animation: card-deal-in 0.7s ease-out;
+}
+
+@keyframes card-deal-in {
+    from {
+        transform: translateX(150px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.card.fade-out {
+    transition: opacity 0.3s ease;
+    opacity: 0;
 }
 
 /* Hands Configurations */
@@ -136,13 +177,14 @@ header {
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
     position: relative;
     z-index: 2;
     gap: 2rem;
     background-color: var(--felt-light);
     border-radius: 16px;
     padding: 2rem 3rem;
-    min-height: 220px;
+    min-height: 320px;
     width: 850px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4)
 }
@@ -158,6 +200,12 @@ header {
     font-family: var(--font-body);
     color: var(--text-cream);
     font-size: 1.1rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.bet.visible {
+    opacity: 1;
 }
 
 #seat-area {
@@ -326,4 +374,21 @@ button:active { /* Press on click effect */
         transform: translateY(0);
         opacity: 1;
     }
+}
+
+/* Play again and bankroll display */
+#right-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#play-again-option {
+    display: flex;
+    animation: slide-in-bottom 0.3s ease-out;
+}
+
+#play-again-option[hidden] {
+    display: none;
 }
