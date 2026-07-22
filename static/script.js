@@ -36,7 +36,7 @@ function autoAdvance(data) {
         "SETTLEMENT": "/settle"
     };
     const phaseDelays = {
-        "DEALING": 2500,
+        "DEALING": 600,
         "DEALER_BLACKJACK_CHECK": 3200,
         "DEALER_TURN": 1500,
         "SETTLEMENT": 1500
@@ -74,6 +74,12 @@ function renderHands(data) {
         const betDiv = document.createElement("div");
         betDiv.className = "bet";
         betDiv.textContent = hand.bet;
+        if (hand.cards.length === 0) {
+            betDiv.hidden = true;
+        } else {
+            betDiv.hidden = false;
+            betDiv.classList.add("visible");
+        }
         if (data.round_phase === "ROUND_OVER") {
             betDiv.hidden = true;
         }
@@ -84,7 +90,10 @@ function renderHands(data) {
         handsContainer.appendChild(handGroupDiv);
 
         dealCardsSequentially(hand.cards, cardsDiv, "seat0-hand" + index, () => {
-            betDiv.classList.add("visible");
+            if (hand.cards.length > 0) {
+                betDiv.hidden = false;
+                betDiv.classList.add("visible");
+            }
             if (isActiveHand) {
                 setTimeout(() => {
                     cardsDiv.classList.add("active");
@@ -191,12 +200,10 @@ async function dealCardsSequentially(cardsArray, containerElement, key, onExpand
 
     try {
         containerElement.innerHTML = "";
-
         if (cardsArray.length === 0) {
             containerElement.classList.remove("revealed", "expanded", "active");
             containerElement.style.width = "";
             containerElement.style.height = "";
-            if (onExpanded) onExpanded();
             return;
         }
 
