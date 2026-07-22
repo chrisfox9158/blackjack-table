@@ -57,8 +57,8 @@ function renderCards(cardsArray, containerElement) {
         const cardSvg = document.createElementNS(svgNS, "svg");
         cardSvg.setAttribute("class", "card");
         cardSvg.setAttribute("viewBox", "0 0 169.075 244.640");
-        cardSvg.setAttribute("width", "80");
-        cardSvg.setAttribute("height", "112");
+        cardSvg.setAttribute("width", "110");
+        cardSvg.setAttribute("height", "154");
 
         const useEl = document.createElementNS(svgNS, "use");
         const fragmentId = card.fragmentId || getCardFragmentId(card);
