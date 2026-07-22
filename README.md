@@ -11,3 +11,30 @@ Engine, API, and majority of front-end logic are hand-written. In the frontend C
 
 ## Third-Party Assets
 Playing card graphics are from [SVG-cards](https://github.com/htdebeer/SVG-cards) by Huub de Beer, based on original work by David Bellot, licensed under [LGPL-2.1](static/svg-cards-LICENSE.txt). The asset file (`static/svg-cards.svg`) is used unmodified.
+
+## Setup
+```
+uv venv
+uv sync
+```
+
+## Usage
+```
+uv run app.py
+```
+
+Open `http://127.0.0.1:5000` in a browser. Gamestate is hosted in a single in-memory instance. Restarting the server will reset the game state; however, the state is persistent across page refresh.
+
+## Repository Structure
+```
+app.py                      # Flask routing
+blackjack_engine.py         # Game engine and state machine
+config.py                   # Rules and betting configuration
+templates/
+    index.html              # Page structure
+static/
+    style.css               # Table layout and animations
+    script.js               # Game state rendering and API calls
+    svg-cards.svg           # Card assets (LGPL-2.1)
+    svg-cards-LICENSE.txt   # LGPL-2.1 licensing for SVG card assets
+```
