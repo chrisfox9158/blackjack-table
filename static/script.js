@@ -71,11 +71,17 @@ function renderCards(cardsArray, containerElement) {
 function renderHands(data) {
     const handsContainer = document.getElementById("hands-container");
     handsContainer.innerHTML = "";
-    for (const hand of data.seats[0].hands) {
+    for (const [index, hand] of data.seats[0].hands.entries()) {
         const handGroupDiv = document.createElement("div");
         handGroupDiv.className = "hand-group";
         const cardsDiv = document.createElement("div");
         cardsDiv.className = "cards";
+
+        const isActiveHand = data.round_phase === "PLAYER_TURN" && index === data.active_hand_idx;
+        if (isActiveHand) {
+            cardsDiv.classList.add("active");
+        }
+
         const outcomeDiv = document.createElement("div");
         outcomeDiv.className = "outcome";
         const betDiv = document.createElement("div");
@@ -92,7 +98,7 @@ function renderHands(data) {
         }
 
         betDiv.textContent = hand.bet;
-        if (data.round_phase === "ROUND_OVER") {
+        if (data.round_phase === "SETTLEMENT" || data.round_phase === "ROUND_OVER") {
             betDiv.hidden = true;
         }
 

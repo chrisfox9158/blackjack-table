@@ -76,11 +76,7 @@ header {
     padding: 2rem 3rem;
     min-height: 220px;
     min-width: 600px;
-    box-shadow:
-        inset 0 4px 8px rgba(0, 0, 0, 0.35),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.35),
-        inset 4px 0 8px rgba(0, 0, 0, 0.25),
-        inset -4px 0 8px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4)
 }
 
 #shoe {
@@ -111,9 +107,17 @@ header {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-.cards { /* row of cards per hand */
+.cards {
     display: flex;
     flex-direction: row;
+    background-color: var(--accent-slate);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.cards.active {
+    background-color: var(--highlight-blue);
 }
 
 .cards .card:not(:first-child) { /* overlap all but the first */
